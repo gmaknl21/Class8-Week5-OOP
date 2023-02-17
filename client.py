@@ -1,6 +1,4 @@
 import random
-
-
 class Client:
     bonus = 300
     interest_rate = 1.05
@@ -60,27 +58,69 @@ class Client:
             return 0
         else:
             return cls.total_balance / cls.num_client
-
-
 class Premium_Client(Client):
     def __init__(self, name, surname, balance, loyalty_point, children_number=0, gender='uncertain'):
         super().__init__(name, surname, balance, children_number, gender)
         self.loyalty_point = loyalty_point
-
     def add_deposit(self, amount):
         super().add_deposit(amount)
-        loyalty_point_earned = amount / 10
-
+        loyalty_point_earned = amount / 2
         self.loyalty_point += loyalty_point_earned
-
-        if self.loyalty_point > 50:
-            self.balance += 100
+        if self.loyalty_point >= 1000:
+            vip_level = 'gold' if self.loyalty_point >= 500 else 'silver' if self.loyalty_point >= 200 else 'bronze'
+            vip_client = VipClient(self.name, self.surname, self.balance, self.loyalty_point, vip_level)
+            del self.__dict__
+            return vip_client
+        if self.loyalty_point > 1000:
+            self.balance += 50
             self.loyalty_point -= 50
-            return(f"Congratulations! You've earned {loyalty_point_earned} loyalty points and received a bonus of {amount}. New balance: {self.balance}")
+            return f"Congratulations! You've earned {loyalty_point_earned} loyalty points and received a bonus of {amount}. New balance: {self.balance}"
+    def __del__(self):
+        self.name = None
+        self.surname = None
+        self.balance = None
+        self.gender = None
+        self.account_number = None
+        self.children_number = None
+        self.loyalty_point = None
+class VipClient(Premium_Client):
+    def __init__(self, name, surname, balance, loyalty_point, vip_level):
+        super().__init__(name, surname, balance, loyalty_point)
+        self.vip_level = vip_level
+    def add_deposit(self, amount):
+        if self.vip_level == 'gold':
+            amount *= 1.03
+        elif self.vip_level == 'silver':
+            amount *= 1.02
+        elif self.vip_level == 'bronze':
+            amount *= 1.01
+        super().add_deposit(amount)
+        return f"Amount after VIP bonus: {amount}"
+    def send_money(self, receiver_account_number, amount):
+        client_object = [obj for obj in globals().values() if isinstance(
+            obj, Client) and obj.account_number == receiver_account_number]
+        if len(client_object) == 0:
+            return 'Receiver client not found'
+        else:
+            receiver_object = client_object[0]
+            super().send_money(receiver_account_number, amount)
+            return f"Money sent to {receiver_object.name} {receiver_object.surname}"
+pclt1 = Premium_Client('Danial', 'Melmav', 15000, 0)
+pclt2 = Premium_Client('Girmay', 'Araya', 40000000, 0)
+# Deposits to pclt1 and pclt2
+pclt1.add_deposit(100)
+pclt2.add_deposit(200)
+# Output after Deposits  Balance 
+print('Current balance :', pclt1.balance)
+print('Current balance :', pclt2.balance)
+# pclt1 is sending 5000 to pclt2 whose account number is pclt2.account_number.
+pclt1.send_money(pclt2.account_number, 5)
+print(f"Blance Account Number:{pclt2.account_number}:", pclt2.balance)
+# loyalty_point
+print(f"Loyalty Point {pclt1.account_number} :", pclt1.loyalty_point)
+print(f"Loyalty Point {pclt2.account_number} :", pclt2.loyalty_point)
 
 
-pclt = Premium_Client('Danial', 'Melmav', 15000, 0)
 
-print(pclt.add_deposit(400))
-print(pclt.balance)
-print(pclt.loyalty_point)
+
+
